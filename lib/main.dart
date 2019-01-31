@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'color_loader.dart';
+import 'stateLoading/color_loader.dart';
+import 'detail.dart';
+import 'item_json.dart';
 
 void main() => runApp(MyApp());
 
@@ -47,7 +49,6 @@ class _GetAPIState extends State<GetAPI> {
           user['name'], user['picture']);
       items.add(item);
     }
-    print(items.length);
     return items;
   }
 
@@ -98,30 +99,4 @@ class _GetAPIState extends State<GetAPI> {
       ),
     );
   }
-}
-
-// StatelessWidget = new page
-
-class DetailList extends StatelessWidget {
-  final ItemJSON item;
-  DetailList(this.item);
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(item.name),
-      ),
-      body: Container(
-        child: Text(item.about),
-      ),
-    );
-  }
-}
-
-// variable in json
-
-class ItemJSON {
-  final int index;
-  final String about, email, name, picture;
-  ItemJSON(this.index, this.about, this.email, this.name, this.picture);
 }
