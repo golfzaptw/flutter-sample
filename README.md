@@ -6,6 +6,6 @@ A new Flutter project.
 
 Sample
 
-<img src="https://github.com/golfzaptw/flutter-sample/blob/master/sample.gif" width="200" height="400" />
+![](simple.gif)
 
 Credit color loader : https://github.com/samarthagarwal/FlutterScreens
