@@ -1,33 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
-import 'stateLoading/color_loader.dart';
-import 'detail.dart';
-import 'item_json.dart';
+import 'package:fluttersimple/repository/api_provider.dart';
+import 'package:fluttersimple/model/user.dart';
+import 'package:fluttersimple/views/detail.dart';
+import 'package:fluttersimple/loader/color_loader.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(MyApp(
+      title: 'Contact User',
+    ));
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  final String title;
+
+  MyApp({Key key, @required this.title}) : super(key: key);
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter WTF',
-      theme: new ThemeData(primaryColor: Colors.black),
-      home: new GetAPI(),
-    );
+  State<StatefulWidget> createState() {
+    // TODO: implement createState
+    return MyAppState();
   }
 }
 
-// set state
-
-class GetAPI extends StatefulWidget {
-  @override
-  _GetAPIState createState() => new _GetAPIState();
-}
-
-// working function
-
-class _GetAPIState extends State<GetAPI> {
-  // list color to use in color loader
+class MyAppState extends State<MyApp> {
+  Future<List<User>> futureJsonResponse;
   List<Color> colors = [
     Colors.red,
     Colors.green,
@@ -35,67 +29,78 @@ class _GetAPIState extends State<GetAPI> {
     Colors.pinkAccent,
     Colors.blue
   ];
-
-  // use future and Dio to call api and return item
-  Future<List<ItemJSON>> _getItem() async {
-    Response response;
-    response = await Dio()
-        .get('https://www.json-generator.com/api/json/get/cfwZmvEBbC?indent=2');
-    var responseData = response.data;
-    // await new Future.delayed(new Duration(seconds: 2));
-    List<ItemJSON> items = [];
-    for (var user in responseData) {
-      ItemJSON item = ItemJSON(user['index'], user['about'], user['email'],
-          user['name'], user['picture']);
-      items.add(item);
-    }
-    return items;
+  @override
+  void initState() {
+    super.initState();
+    futureJsonResponse = loadJson();
   }
 
   @override
   Widget build(BuildContext context) {
-    // get item from function and set listview
-    var futureBuilder = FutureBuilder(
-        future: _getItem(),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.none:
-              return Text('Press button to start.');
-            case ConnectionState.active:
-            case ConnectionState.waiting:
-              return ColorLoader(colors: colors,duration: Duration(milliseconds: 1200),);
-            case ConnectionState.done:
-              if (snapshot.hasError) return Text('Error: ${snapshot.error}');
-              return ListView.builder(
-                itemCount: snapshot.data.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage:
-                          NetworkImage(snapshot.data[index].picture),
-                    ),
-                    title: Text(snapshot.data[index].name),
-                    subtitle: Text(snapshot.data[index].email),
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          new MaterialPageRoute(
-                              builder: (context) =>
-                                  DetailList(snapshot.data[index])));
-                    },
-                  );
-                },
-              );
-          }
-          return null;
-        });
+    var futureBuilder = FutureBuilder<List<User>>(
+      future:
+          futureJsonResponse, // a previously-obtained Future<String> or null
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.none:
+            return Text('ConnectionState.none');
+          case ConnectionState.active:
+            return Text('ConnectionState.active');
+          case ConnectionState.waiting:
+            return ColorLoader5(
+              dotOneColor: Colors.redAccent,
+              dotTwoColor: Colors.blueAccent,
+              dotThreeColor: Colors.green,
+              dotType: DotType.circle,
+              dotIcon: Icon(Icons.adjust),
+              duration: Duration(seconds: 1),
+            );
+          case ConnectionState.done:
+            if (snapshot.hasError) return Text('Error: ${snapshot.error}');
+            return ListView.builder(
+              itemCount: snapshot.data.length,
+              itemBuilder: (context, i) {
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(snapshot.data[i].picture),
+                  ),
+                  title: Text(snapshot.data[i].name),
+                  subtitle: Text(snapshot.data[i].email),
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => DetailPage(
+                                  user: snapshot.data[i],
+                                )));
+                  },
+                );
+              },
+            );
+        }
+        return null; // unreachable
+      },
+    );
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Get List User'),
-      ),
-      body: Container(
-        child: futureBuilder,
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.refresh),
+              onPressed: () {
+                print('Reloading');
+                setState(() {
+                  futureJsonResponse = loadJson();
+                });
+              },
+            )
+          ],
+        ),
+        body: Center(
+          child: futureBuilder,
+        ),
       ),
     );
   }
